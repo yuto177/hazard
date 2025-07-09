@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>避難所マップ</title>
+   <link rel="stylesheet" href="/css/map.css">
+</head>
+<body>
+  <div class="container">
+    <div id="map"></div>
+
+    <div class="sidebar">
+      <div class="panel-box">
+        <h3>避難リスト</h3>
+        <div class="evacuation-list">
+          <a onclick="goToShelter('K小学校')">K小学校</a>
+          <a onclick="goToShelter('N小学校')">N小学校</a>
+          <a onclick="goToShelter('KN展望台')">KN展望台</a>
+        </div>
+      </div>
+
+      <div class="panel-box">
+        <h3>家族状況</h3>
+        <div id="family-status-list"></div>
+
+        <div class="form-group">
+          <input type="text" id="name-input" placeholder="名前" />
+          <select id="status-select">
+            <option value="red">避難不明</option>
+            <option value="yellow">避難中</option>
+            <option value="green">避難完了</option>
+            <option value="gray">未確認</option>
+          </select>
+          <button class="add-btn" onclick="addFamilyMember()">追加</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let familyData = [
+      { name: "OTANI SYOHEI", status: "red" },
+      { name: "OTANI SYOHEI", status: "green" },
+      { name: "OTANI SYOHEI", status: "gray" },
+      { name: "OTANI SYOHEI", status: "yellow" },
+    ];
+
+    function renderFamilyStatus() {
+      const list = document.getElementById("family-status-list");
+      list.innerHTML = "";
+
+      familyData.forEach((member, index) => {
+        const div = document.createElement("div");
+        div.className = "status-item";
+        div.innerHTML = `
+          <div>
+            <span class="status-dot status-${member.status}"></span>${member.name}
+          </div>
+          <button class="delete-btn" onclick="removeFamilyMember(${index})">×</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function addFamilyMember() {
+      const name = document.getElementById("name-input").value.trim();
+      const status = document.getElementById("status-select").value;
+
+      if (name === "") {
+        alert("名前を入力してください");
+        return;
+      }
+
+      familyData.push({ name, status });
+      renderFamilyStatus();
+
+      document.getElementById("name-input").value = "";
+      document.getElementById("status-select").value = "red";
+    }
+
+    function removeFamilyMember(index) {
+      familyData.splice(index, 1);
+      renderFamilyStatus();
+    }
+
+    window.onload = renderFamilyStatus;
+
+    // 避難所の位置情報
+    const shelters = {
+      "K小学校": { lat: 34.705, lng: 135.495 },
+      "N小学校": { lat: 34.710, lng: 135.505 },
+      "KN展望台": { lat: 34.695, lng: 135.515 }
+    };
+
+    let map;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 34.6937, lng: 135.5023 },
+        zoom: 12,
+      });
+
+      // 避難所マーカー設置（任意）
+      for (const name in shelters) {
+        new google.maps.Marker({
+          position: shelters[name],
+          map: map,
+          title: name,
+          icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+        });
+      }
+    }
+
+    function goToShelter(name) {
+      const shelter = shelters[name];
+      if (shelter && map) {
+        map.setCenter(shelter);
+        map.setZoom(16);
+      }
+    }
+  </script>
+
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANI_7btKHsCpMDWRKPH_FYK9Lq-QtGMK4&callback=initMap" async defer></script>
+</body>
+</html>
